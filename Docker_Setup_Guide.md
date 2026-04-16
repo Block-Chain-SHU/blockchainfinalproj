@@ -1,137 +1,237 @@
-## Docker版部署fabric-trace步骤
-> 相较于主要的部署方式，不需要安装nvm，且使用docker部署项目更加方便管理
 
-强烈推荐按照步骤使用云服务器搭建本系统，虚拟机的问题较多。点击此链接直达新人活动页面：[https://curl.qcloud.com/Sjy0zKjy](https://curl.qcloud.com/Sjy0zKjy) 点击首单特惠，**购买2核4G或以上的服务器**，199/年（价格经常会调整），如果后续准备做程序开发可以用新用户优惠买三年的，安装Ubuntu20.04系统。
 
-**严格按照以下步骤操作，以下步骤已经经过上百人次的验证，如果遇到报错请仔细检查是否遗漏某个步骤。
+## 搭建步骤
+
+
+> ⚠️ 由于相关资源的失效，如果部分内容与视频不一致请以本文档为准
+
+> ⚠️强烈推荐按照步骤使用全新的腾讯云轻量云服务器搭建本系统，虚拟机的问题较多。点击此链接直达新人活动页面：[https://curl.qcloud.com/Sjy0zKjy](https://curl.qcloud.com/Sjy0zKjy) ，**购买轻量2核4G或以上的服务器**，188/年（价格经常会调整），如果后续准备做程序开发可以用新用户优惠买三年的，安装**Ubuntu20.04**系统。系统版本不一致极有可能部署不成功。
+
+> 注：不建议使用阿里云等其他云服务器，与演示步骤会不一致，且会有额外问题。
+
+
+
+> 付费课程用户可使用一键部署脚本，减少 90% 操作步骤  
+> 🚀 https://www.bilibili.com/video/BV119ffB4EoA
+
+**严格按照以下步骤操作，以下步骤已经经过上千人次的验证，如果遇到报错请仔细检查是否遗漏某个步骤。已做好换源处理，不要使用任何代理工具。
 如果对Linux命令不熟悉，请一定先学习下：[快速入门Linux及使用VSCode远程连接Linux服务器](https://blog.csdn.net/qq_41575489/article/details/139434933)，遇到报错后一定不能跳过，解决完再往下一步！**
 
 1. 安装docker 
 
-    ```bash
-    #下载docker 
-    # 官方脚本当前已无法下载，使用gitee备份的脚本:
-    curl -fsSL https://gitee.com/real__cool/fabric_install/raw/main/docker_install.sh | bash -s docker --mirror Aliyun
-    #添加当前用户到docker用户组 
-    sudo usermod -aG docker $USER 
-    newgrp docker 
-    sudo mkdir -p /etc/docker
-    #配置docker镜像加速，近期非常不稳定，如果以下源不好用可以再找下其他源
-    #下边的源2024.8.29日测试可用
-    sudo tee /etc/docker/daemon.json <<-'EOF'
-    {
-        "registry-mirrors": [
-            "https://docker.m.daocloud.io",
-            "https://docker.1panel.live",
-            "https://hub.rat.dev"
-        ]
-    }
-    EOF
+	```bash
+	#下载docker 
+	# 官方脚本当前已无法下载，使用gitee备份的脚本:
+	# 本项目使用Docker版本：27.2.1 ，Ubuntu 20.04直接用以下指令即可
+	# 近期源不稳定，如遇超时可使用：--mirror Aliyun
+	curl -fsSL https://gitee.com/real__cool/fabric_install/raw/main/docker_install.sh | bash -s docker --mirror AzureChinaCloud
+	#添加当前用户到docker用户组 
+	sudo usermod -aG docker $USER 
+	newgrp docker 
+	sudo mkdir -p /etc/docker
+	#配置docker镜像加速，近期非常不稳定，如果以下源不好用可以再找下其他源
+	#下边的源2026.2.6日测试可用
+	sudo tee /etc/docker/daemon.json <<-'EOF'
+	{
+	    "registry-mirrors": [
+			"https://docker.1ms.run",
+	        "https://docker.1panel.live",
+			"https://docker.m.ixdev.cn",
+			"https://docker.xuanyuan.me",
+	        "https://hub.rat.dev"
+	    ]
+	}
+	EOF
 
-    #重启docker 
-    sudo systemctl daemon-reload
-    sudo systemctl restart docker
-    ```
+	#重启docker 
+	sudo systemctl daemon-reload
+	sudo systemctl restart docker
+	```
 
 2. 安装开发使用的go、node、jq
 
-    ```bash
-    #下载二进制包
-    wget https://golang.google.cn/dl/go1.19.linux-amd64.tar.gz
-    #将下载的二进制包解压至 /usr/local目录
-    sudo tar -C /usr/local -xzf go1.19.linux-amd64.tar.gz
-    mkdir $HOME/go
-    #将以下内容添加至环境变量 ~/.bashrc
-    export GOPATH=$HOME/go
-    export GOROOT=/usr/local/go
-    export PATH=$GOROOT/bin:$PATH
-    export PATH=$GOPATH/bin:$PATH
-    #更新环境变量
-    source  ~/.bashrc 
-    #设置代理
-    go env -w GO111MODULE=on
-    go env -w GOPROXY=https://goproxy.cn,direct
-    # 更新环境变量
-    source  ~/.bashrc
-    #安装jq 
-    sudo apt install jq
-    ```
+	```bash
+	#下载二进制包
+	wget https://golang.google.cn/dl/go1.19.linux-amd64.tar.gz
+	#将下载的二进制包解压至 /usr/local目录
+	sudo tar -C /usr/local -xzf go1.19.linux-amd64.tar.gz
+	mkdir $HOME/go
+	#将以下内容添加至环境变量 ~/.bashrc
+	export GOPATH=$HOME/go
+	export GOROOT=/usr/local/go
+	export PATH=$GOROOT/bin:$PATH
+	export PATH=$GOPATH/bin:$PATH
+	#更新环境变量
+	source  ~/.bashrc 
+	#设置代理
+	go env -w GO111MODULE=on
+	go env -w GOPROXY=https://goproxy.cn,direct
+	
+	#下载nvm安装脚本
+	wget https://gitee.com/real__cool/fabric_install/raw/main/nvminstall.sh
+	#安装nvm；屏幕输出内容添加环境变量
+	chmod +x nvminstall.sh
+	./nvminstall.sh
+	# 将环境变量写入.bashrc
+	export NVM_DIR="$HOME/.nvm"
+	[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+	[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+	export NVM_NODEJS_ORG_MIRROR=http://npmmirror.com/mirrors/node/ #更换阿里云nvm node源
+ 
+	# 更新环境变量
+	source  ~/.bashrc
+	# 安装node16
+	nvm install 16
+	#换源
+	npm config set registry https://registry.npmmirror.com
+	
+	#安装jq 
+	sudo apt install jq
+	```
 
 
 
 3. 克隆本项目 
 
-    ```bash
-    git clone https://gitee.com/real__cool/fabric-trace
-    ```
+	```bash
+	git clone https://gitee.com/real__cool/fabric-trace
+	```
 
 4. 启动区块链部分。在fabric-trace/blockchain/network目录下:
 
-    ```bash
-    # 仅在首次使用执行：下载Fabric Docker镜像。如果拉取速度过慢或失败请检查是否完成docker换源，或者更换一个其他的镜像源再试。
-    ./install-fabric.sh -f 2.5.6 d 
-    ```
-    ```bash
-    # 启动区块链网络
-    ./start.sh
-    ```	
-     **如果在启动区块链网络时遇到报错可以尝试:**
-    ```bash
-    # 执行清理所有的容器指令：
-    docker rm -f $(docker ps -aq)
-    ```
-    **然后再重新启动区块链网络**
+	```bash
+	# 仅在首次使用执行：下载Fabric Docker镜像。如果拉取速度过慢或失败请检查是否完成docker换源并执行了重启docker命令。
+	./install-fabric.sh -f 2.5.6 d 
+	```
+	```bash
+	# 启动区块链网络
+	./start.sh
+	```	
+ 	 **如果在启动区块链网络时遇到报错可以尝试:**
+	```bash
+	# 执行清理所有的容器指令：
+	docker rm -f $(docker ps -aq)
+	```
+	**然后再重新启动区块链网络**
 
-5. 修改后端IP，将以下文件中的IP：`119.45.247.29`，换成自己云服务器的IP。
-    ```bash
-    fabric-trace/application/web/.env.production
-    fabric-trace/application/web/.env.development
-    fabric-trace/application/web/src/router/index.js
-    ```
-    或使用application/replaceip.sh脚本根据指引修改IP，在fabric-trace/application目录下
-    ```bash
-    ./replaceip.sh
-    ```
+5. 启动后端 在fabric-trace/application/backend目录下： 执行： `go run main.go`
 
-6. 启动app，在fabric-trace/application目录执行： 
+6. 修改后端IP，将以下文件中的IP：`119.45.247.29`，换成自己云服务器的IP。
+	```bash
+	fabric-trace/application/web/.env.production
+	fabric-trace/application/web/.env.development
+	fabric-trace/application/web/src/router/index.js
+	```
+	或使用application/replaceip.sh脚本根据指引修改IP，在fabric-trace/application目录下
+	```bash
+	./replaceip.sh
+	```
 
-    ```bash
-    ./stop_docker.sh
-    ```
-8. 在腾讯云轻量应用服务器防火墙页面，放行TCP端口`8080,9090,9528`
+7. 新开一个窗口，启动前端 在fabric-trace/application/web目录下： 执行： 
+
+	```bash
+	# 仅在首次运行执行：安装依赖
+	npm install 
+	```
+
+	```bash
+	# 启动前端
+	npm run dev
+	```
+8. 在腾讯云轻量应用服务器防火墙页面，放行TCP端口`8080,9090,9528`。如果是云服务器，则修改[安全组](https://cloud.tencent.com.cn/document/product/215/39790)。
 ![防火墙配置](https://truetechlabs-1259203851.cos.ap-shanghai.myqcloud.com/picgo202404151240899.png)
-9. 在浏览器中打开：http://云服务器IP:9090 即可看到前端页面。
-10. 使用tape对项目进行压力测试
+9. 在浏览器中打开：http://云服务器IP:9528 即可看到前端页面。如果出现network error等网络报错，请按步骤6更换IP后重启项目。
+10. 使用tape对项目进行压力测试（仅做测试demo，信息上链时有bug，建议使用课程里的caliper）
 根据blockchain/chaincode/chaincode/smartcontract.go中的合约函数的签名，编写压测的参数，需要修改的内容是tape目录下的yaml文件中的args。args第一个参数是函数名，后面的参数是函数的参数。例如：
-    ```yaml
-    args:
-    # 函数名
-    - RegisterUser
-    # userID string
-    - 1
-    #userType string
-    - randomString8
-    # realInfoHash string
-    - randomString8
-    ```
+	```yaml
+	args:
+	# 函数名
+	- RegisterUser
+	# userID string
+	- 1
+	#userType string
+	- randomString8
+	# realInfoHash string
+	- randomString8
+	```
 执行`./tape --config config_register.yaml -n 1`即可完成用户1的注册，然后可以对农产品上链操作与获取用户信息函数进行压测。更多的压测案例可以根据合约函数的签名进行修改。
 附农产品上链操作与获取用户信息函数进行压测操作指令：
 
-```bash
+```	bash
 ./tape --config config_invoke.yaml -n 100
 ./tape --config config_query.yaml -n 100
 ```
 
-11. 关闭项目
+#### 八、关闭项目与重新运行步骤
+##### 关闭项目：
+1. 前端（`npm run dev`界面）与后端（`go run main.go`界面：
+
+	使用键盘组合键：`ctrl+c`
+
+2. 区块链部分：
+
+	在`fabric-trace/blockchain/network`目录`./stop.sh`，此步骤会清理所有的区块链、Mysql中的数据。
+
+##### 开发模式启动项目：
+1. 在`fabric-trace/blockchain/network`目录
+`./start.sh` 如果遇到报错可以执行以下命令后再试：
+执行清理所有的容器指令：
+`docker rm -f $(docker ps -aq)`
+2. 在`fabric-trace/application/backend`目录下： 执行： `go run main.go`
+3. 在`fabric-trace/application/web`目录下： 执行：
+`npm run dev`
+4. 在http://服务器IP:9528打开
+
+##### 生产环境部署项目(后台运行，访问速度更快)
+1. 在`fabric-trace/blockchain/network`目录
+`./start.sh` 如果遇到报错可以执行以下命令后再试：
+执行清理所有的容器指令：
+`docker rm -f $(docker ps -aq)`
+2. 在`fabric-trace/application`目录下： 执行： `./start_prod.sh`
+3. 在http://服务器IP:9090打开
+
+	注意：此方式部署项目会在后台运行，如果后续遇到端口号占用可以尝试关闭占用9090端口号的进程，可以参考：
+	[解决端口占用 bind:address already in use](https://blog.csdn.net/qq_41575489/article/details/137434008?spm=1001.2014.3001.5501)
 
 
-    ```bash
-    cd application
-    #关闭前后端
-    ./stop_docker.sh
-    #关闭区块链
-    cd blockchain/network
-    ./stop.sh
-    ```
+
+#### 十、特别提示：
+1. 使用虚拟机时区块链浏览器有时候会出现无法访问的情况，可以尝试重启浏览器容器。
+2. 为了减少用户运行本项目时的难度，区块链目录的start.sh脚本在启动区块链时同时会清理掉所有的历史数据！如果重启机器后不希望清理原来的数据启动区块链，可以使用指令：`docker start $(docker ps -aq)`启动所有节点
+
+#### 常见问题总结（检查第一个报错的位置）
+上述部署步骤已经上百人次验证并顺利完成，如果您通过上述步骤未能运行项目，请检查环境是否与本项目要求的一致，任何修改或遗漏步骤都可能引起项目不能正常运行，请严格按照视频与文章步骤再次尝试或查看以下常见问题列表。若还是有问题请在[B站项目搭建视频](https://www.bilibili.com/video/BV1Ar421H7TK)评论区查看其他人的留言是否有相同的问题，如果还是没有解决请在视频下评论问题并附上与【安装步骤不一致的地方】或【第一个遇到的报错】，如果问题不够明确，我们也很难帮助到您。购买[B站：Fabric V2.5通用溯源项目讲解与二次开发课程](https://www.bilibili.com/cheese/play/ss15923?bsource=link_copy)可以加入配套社群，方便本项目交流与答疑。如果需要远程搭建服务或商业合作请填写收集表，对于政府等机构公益项目可以提供免费技术支持：[【腾讯文档】本项目搭建服务或商务合作意向收集](https://docs.qq.com/form/page/DQ1hIck5OQkNGQXF2)
+
+1. 需要给机器安装mysql吗？
+按照项目搭建过程即可部署好mysql，mysql容器与区块链节点一起启动，因此不需要单独安装mysql。
+2. docker镜像拉取过慢或提示timeout
+按照步骤docker换源并重启再试。
+3. 安装链码时报错：exec: "go": executable file not found in $PATH
+可能是go环境未安装好；可能使用了sudo，不要与安装步骤不一致！
+4. jq:未找到命令
+漏掉安装步骤中的安装jq，使用sudo apt install jq即可解决
+5. docker权限报错：docker: permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock:
+重新执行安装步骤中的：
+
+	```bash
+	#添加当前用户到docker用户组 
+	sudo usermod -aG docker $USER 
+	newgrp docker 
+	```
+
+6. 提示mysql或3337端口错误
+mysql未启动，重启区块链网络部分可以一并重启mysql。
+7. 前端提示network error、timeout
+修改好IP后重启整个项目；检查防火墙是否放行相关端口。
+8. 前端登录页面提示404
+检查是否修改好IP并重启前端服务器，除了IP不要修改任何字符。
+9. npm run dev 不能启动前端
+检查npm install是否完整把所有包装上了。
+10. Chaincode installation on peerg.orgl has failed
+Deploying chaincode failed
+此问题并非第一个报错，仔细检查之前的步骤中第一个报错，然后与上述问题对照。
+11. eslint相关报错 此报错为代码规范性报错，不影响运行，可以根据提示自行修复（可不修复）
+12. 其他问题
+使用全新Ubuntu20.04系统，重新严格按照步骤再试，出现第一个报错后在视频下留言。
 
 

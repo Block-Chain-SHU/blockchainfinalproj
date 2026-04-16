@@ -16,7 +16,7 @@ func SetupRouter() *gin.Engine {
 	// 解决跨域问题
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},                                       // 允许的来源
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},            // 允许的请求方法
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"}, // 允许的请求方法
 		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"}, // 允许的请求头
 		ExposeHeaders:    []string{"Content-Length"},                          // 暴露的响应头
 		AllowCredentials: true,                                                // 允许传递凭据（例如 Cookie）
