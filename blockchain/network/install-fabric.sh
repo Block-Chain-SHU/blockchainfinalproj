@@ -297,7 +297,7 @@ if [[ "${_arg_comp[@]}" =~ (^| |,)b(inary)? ]]; then
         echo
         echo "Pull Hyperledger Fabric binaries"
         echo
-        pullBinaries
+        #pullBinaries
 fi
 
 if [[ "${_arg_comp[@]}" =~ (^| |,)p(odman)? ]]; then

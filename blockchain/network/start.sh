@@ -1,27 +1,36 @@
 #!/bin/bash
-./stop.sh
-# 启动mysql容器
-docker run --name fabrictrace-mysql -p 3337:3306 -e MYSQL_ROOT_PASSWORD=fabrictrace -d mysql:8
-# 要检查的镜像版本
-image_versions=("2.5.6")
 
-# 要检查的镜像列表
+# 定义国内镜像前缀
+MIRROR_PREFIX="docker.m.daocloud.io/"
+
+./stop.sh
+
+# 1. 启动 MySQL（添加前缀）
+echo "正在拉取并启动 MySQL..."
+docker run --name fabrictrace-mysql -p 3337:3306 \
+  -e MYSQL_ROOT_PASSWORD=fabrictrace -d \
+  ${MIRROR_PREFIX}mysql:8
+
+# 2. 检查并拉取 Fabric 镜像
+image_versions=("2.5")
 images=("hyperledger/fabric-tools" "hyperledger/fabric-peer" "hyperledger/fabric-orderer" "hyperledger/fabric-ccenv" "hyperledger/fabric-baseos")
 
-# 遍历镜像列表
 for image in "${images[@]}"
 do
     for version in "${image_versions[@]}"
     do
-        # 使用docker images命令查找特定镜像和版本
+        FULL_IMAGE_NAME="${MIRROR_PREFIX}${image}:${version}"
+        LOCAL_NAME="${image}:${version}"
+
         if ! docker images -a | grep "$image" | grep "$version" &> /dev/null
         then
-            echo "镜像 $image:$version 不存在，开始拉取..."
-            docker pull "$image:$version"
+            echo "镜像 $LOCAL_NAME 不存在，从私有源拉取..."
+            docker pull "$FULL_IMAGE_NAME"
+            # 关键步骤：拉取后打上 tag，这样 network.sh 脚本就能通过原名直接找到镜像
+            docker tag "$FULL_IMAGE_NAME" "$LOCAL_NAME"
         fi
     done
 done
-
 
 # 启动区块链网络、创建通道
 ./network.sh up createChannel

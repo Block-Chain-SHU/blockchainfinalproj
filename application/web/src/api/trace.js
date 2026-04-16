@@ -58,5 +58,3 @@ export function getTraceHistory(data) {
     data
   })
 }
-
-

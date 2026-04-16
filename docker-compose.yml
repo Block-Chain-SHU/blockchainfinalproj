@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  fabric-trace-app:
+    build: .
+    container_name: fabric-trace-app
+
+    ports:
+      - "8080:8080"
+      - "5000:9090"
+      - "19528:9528"
+
+    volumes:
+      - ./:/app
+
+    stdin_open: true
+    tty: true
+
+    environment:
+      - HOST_IP=host.docker.internal
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
